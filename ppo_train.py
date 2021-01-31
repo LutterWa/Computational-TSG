@@ -9,13 +9,12 @@ from OAgent_sim import OAgentSim
 from ppo_model import PPO
 from dnn_test import DeepNeuralNetwork
 
-BATCH_SIZE = 256  # update batch size
-TRAIN_EPISODES = 1000  # total number of episodes for training
+BATCH_SIZE = 32  # update batch size
+TRAIN_EPISODES = 500  # total number of episodes for training
 TEST_EPISODES = 100  # total number of episodes for testing
 GAMMA = 0.95
 REWARD_SAVE_CASE = 0
 dnn = DeepNeuralNetwork()
-tgo = DeepNeuralNetwork(4, 'tgo_model')
 pi = 3.141592653589793
 RAD = 180 / pi  # 弧度转角度
 
@@ -33,22 +32,16 @@ class OMissile(OAgentSim):
         self.ia = float(dnn.predict([dnn_state]))
         return self.ia
 
-    def get_tgo(self, dnn_state=None):
-        v, theta, r, q, x, y, t = self.collect()
-        dnn_state = [v / 315, theta / -0.6, x / -1e4, y / 1.5e4]
-        self.tgo = float(tgo.predict([dnn_state]))
-        return self.tgo
-
     def get_state(self, a_target):
         v, theta, r, q, x, y, t = self.collect()
         ia = self.get_ia()
-        tgo = self.get_tgo()
+        tgo = r / v
         state_local = [(a_target - ia) / tgo]
         return np.array(state_local)
 
     def get_reward(self, t_target):
         v, theta, r, q, x, y, t = self.collect()
-        tgo = self.get_tgo()
+        tgo = r / v
         e_local = (t_target - self.ia) / tgo
         vy = v * math.sin(theta)  # y向速度
         zem = y + vy * tgo
